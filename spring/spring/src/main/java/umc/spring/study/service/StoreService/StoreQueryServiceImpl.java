@@ -27,4 +27,11 @@ public class StoreQueryServiceImpl implements StoreQueryService {
         filterStores.forEach(store -> System.out.println("Store: "+ store));
         return filterStores;
     }
+
+    @Override
+    public boolean existsById(Long id) {
+        return storeRepository.existsById(id);
+    }
+
+
 }

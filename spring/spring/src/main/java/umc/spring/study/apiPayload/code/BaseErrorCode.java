@@ -4,4 +4,6 @@ public interface BaseErrorCode {
     ErrorReasonDTO getReason();
 
     ErrorReasonDTO getReasonHttpStatus();
+
+    String getMessage();
 }
