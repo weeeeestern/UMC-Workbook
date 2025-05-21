@@ -3,11 +3,14 @@ package umc.spring.study.web.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import umc.spring.study.apiPayload.ApiResponse;
 import umc.spring.study.domain.Review;
 import umc.spring.study.service.ReviewService.ReviewCommandService;
+import umc.spring.study.validation.annotation.StoreExists;
 import umc.spring.study.web.dto.ReviewRequestDTO;
+import umc.spring.study.web.dto.StoreResponseDTO;
 
 @RestController
 @RequiredArgsConstructor
