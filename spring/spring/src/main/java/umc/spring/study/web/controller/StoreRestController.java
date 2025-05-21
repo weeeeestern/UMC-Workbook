@@ -14,12 +14,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import umc.spring.study.apiPayload.ApiResponse;
+import umc.spring.study.converter.MissionConverter;
 import umc.spring.study.converter.StoreConverter;
+import umc.spring.study.domain.Mission;
 import umc.spring.study.domain.Review;
 import umc.spring.study.domain.Store;
+import umc.spring.study.service.MissionService.MissionQueryService;
 import umc.spring.study.service.StoreService.StoreCommandService;
 import umc.spring.study.service.StoreService.StoreQueryService;
 import umc.spring.study.validation.annotation.StoreExists;
+import umc.spring.study.validation.annotation.ValidPage;
+import umc.spring.study.web.dto.MissionResponseDTO;
 import umc.spring.study.web.dto.StoreRequestDTO;
 import umc.spring.study.web.dto.StoreResponseDTO;
 
@@ -30,6 +35,7 @@ import umc.spring.study.web.dto.StoreResponseDTO;
 public class StoreRestController {
     private final StoreCommandService storeCommandService;
     private final StoreQueryService storeQueryService;
+    private final MissionQueryService missionQueryService;
 
 
     @PostMapping
@@ -55,5 +61,23 @@ public class StoreRestController {
     public ApiResponse<StoreResponseDTO.ReviewPreViewListDTO> getReviewList(@StoreExists @PathVariable(name = "storeId") Long storeId,@RequestParam(name = "page") Integer page){
         Page<Review> reviewList =storeQueryService.getReviewList(storeId, page);
         return ApiResponse.onSuccess(StoreConverter.reviewPreViewListDTO(reviewList));
+    }
+
+    @GetMapping("/{storeId}/missions")
+    @Operation(summary = "특정 가게의 미션 목록 조회", description = "특정 가게(storeId)의 미션 목록을 1 페이지부터 조회합니다.")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "page 값이 1 미만일 경우", content = @Content(schema = @Schema(implementation = ApiResponse.class)))
+    })
+    @Parameters({
+            @Parameter(name = "storeId", description = "가게 ID (Path Variable)"),
+            @Parameter(name = "page", description = "1 이상의 정수 (쿼리 스트링)")
+    })
+    public ApiResponse<MissionResponseDTO.MissionListDTO> getStoreMissions(
+            @PathVariable Long storeId,
+            @ValidPage @RequestParam("page") Integer page) {
+
+        Page<Mission> missions = missionQueryService.getMissionsByStoreId(storeId, page - 1); // 0-index 처리
+        return ApiResponse.onSuccess(MissionConverter.toMissionListDTO(missions));
     }
 }
