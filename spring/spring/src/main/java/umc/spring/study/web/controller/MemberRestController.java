@@ -12,14 +12,22 @@ import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 import umc.spring.study.apiPayload.ApiResponse;
 import umc.spring.study.converter.MemberConverter;
+import umc.spring.study.converter.MemberMissionConverter;
+import umc.spring.study.converter.MissionConverter;
 import umc.spring.study.converter.ReviewConverter;
 import umc.spring.study.domain.Member.Member;
+import umc.spring.study.domain.Mission;
 import umc.spring.study.domain.Review;
+import umc.spring.study.domain.mapping.MemberMission.MemberMission;
+import umc.spring.study.domain.mapping.MemberMission.MemberMissionStatus;
+import umc.spring.study.service.MemberMissionService.MemberMissionQueryService;
 import umc.spring.study.service.MemberService.MemberCommandService;
+import umc.spring.study.service.MissionService.MissionQueryService;
 import umc.spring.study.service.ReviewService.ReviewQueryService;
 import umc.spring.study.validation.annotation.ValidPage;
 import umc.spring.study.web.dto.MemberRequestDTO;
 import umc.spring.study.web.dto.MemberResponseDTO;
+import umc.spring.study.web.dto.MissionResponseDTO;
 import umc.spring.study.web.dto.ReviewResponseDTO;
 
 @RestController
@@ -28,6 +36,7 @@ import umc.spring.study.web.dto.ReviewResponseDTO;
 public class MemberRestController {
     private final MemberCommandService memberCommandService;
     private final ReviewQueryService reviewQueryService;
+    private final MemberMissionQueryService memberMissionQueryService;
 
     @PostMapping("/")
     public ApiResponse<MemberResponseDTO.JoinResultDTO> join(@RequestBody @Valid MemberRequestDTO.JoinDto request){
@@ -51,5 +60,23 @@ public class MemberRestController {
 
         Page<Review> reviewPage = reviewQueryService.getMyReviews(memberId, page - 1); // 0-based index 처리
         return ApiResponse.onSuccess(ReviewConverter.toMyReviewListDTO(reviewPage));
+    }
+
+    @GetMapping("/{memberId}/missions")
+    @Operation(summary = "내가 진행 중인 미션 목록 조회", description = "로그인 없이 특정 회원의 진행 중인 미션 목록을 조회합니다. 페이지는 1부터 시작합니다.")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 페이지 값 (1 미만)", content = @Content(schema = @Schema(implementation = ApiResponse.class)))
+    })
+    @Parameters({
+            @Parameter(name = "memberId", description = "회원 ID (path variable)"),
+            @Parameter(name = "page", description = "1 이상의 페이지 번호 (query string)")
+    })
+    public ApiResponse<MissionResponseDTO.MissionListDTO> getMyMissions(
+            @PathVariable Long memberId,
+            @ValidPage @RequestParam("page") Integer page) {
+
+        Page<MemberMission> missions = memberMissionQueryService.getMyMissionsByMemberIAndStatus(memberId, MemberMissionStatus.CHALLENGING,page - 1);
+        return ApiResponse.onSuccess(MemberMissionConverter.toMissionListDTO(missions));
     }
 }
